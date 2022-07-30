@@ -1,0 +1,17 @@
+title Submitting a new note
+
+Browser->Server: HTTP POST Form Data https://studies.cs.helsinki.fi/exampleapp/new_note
+note over Server: Push Form Data to notes array\nRedirect to https://studies.cs.helsinki.fi/exampleapp/notes
+Server-->Browser: HTTP response status code 302 Redirect /exampleapp/notes
+
+note over Browser: Browser requests page /exampleapp/notes
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/notes
+Server-->Browser: HTTP response status code 200 OK notes
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/main.css
+Server-->Browser: HTTP response status code 200 OK main.css
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/main.js
+Server-->Browser: HTTP response status code 200 OK main.js
+note over Browser: Browser starts running the JavaScript file\nAn HTTP request is initiated for /exampleapp/data.json
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/data.json
+Server-->Browser: HTTP response status code 200 OK data.json
+note over Browser: JavaScript event handler function processes data.json,\nuses DOM to display the data as a list
