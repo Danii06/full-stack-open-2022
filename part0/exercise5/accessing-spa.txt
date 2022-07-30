@@ -1,0 +1,11 @@
+title Accessing spa
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/spa
+Server-->Browser: HTTP response status code 200 OK spa
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/main.css
+Server-->Browser: HTTP response status code 200 OK main.css
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/spa.js
+Server-->Browser: HTTP response status code 200 OK spa.js
+note over Browser: Browser starts running the JavaScript file\nAn HTTP request is initiated for /exampleapp/data.json
+Browser->Server: HTTP GET https://studies.cs.helsinki.fi/exampleapp/data.json
+Server-->Browser: HTTP response status code 200 OK data.json
+note over Browser: JavaScript event handler function processes data.json,\nuses DOM to display the data as a list
