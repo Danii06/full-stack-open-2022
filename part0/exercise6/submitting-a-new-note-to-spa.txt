@@ -1,0 +1,5 @@
+title Submitting a new note to spa
+
+note over Browser: Browser loads JavaScript event handler that triggers on form submit\nEvent handler is triggered, push new note to notes array, use DOM to display notes\nCreate HTTP POST request to send new note to server
+Browser->Server: HTTP POST https://studies.cs.helsinki.fi/exampleapp/new_note_spa
+Server-->Browser: HTTP response code status 201 Created
