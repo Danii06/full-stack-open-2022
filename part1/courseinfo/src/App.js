@@ -8,9 +8,13 @@ const Header = (props) => {
   )
 }
 
+const Part = (props) => {
+  return <p>{props.data.name} {props.data.amount}</p>
+}
+
 const Content = (props) => {
   return props.content.map((part) => {
-    return <p key={part.name}>{part.name} {part.amount}</p>
+    return <Part key={part.name} data={part} />
   });
 }
 
