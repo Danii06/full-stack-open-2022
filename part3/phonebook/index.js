@@ -70,7 +70,7 @@ app.get('/info',(req,res)=>{
             ${new Date().toString()}`)
 })
 
-const port = 3001
+const PORT = process.env.PORT || 3001
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
