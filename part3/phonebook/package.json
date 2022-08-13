@@ -11,10 +11,13 @@
   "author": "Dani Adham",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "mongoose": "^6.5.2",
     "morgan": "^1.10.0"
   },
   "devDependencies": {
+    "cors": "^2.8.5",
     "nodemon": "^2.0.19"
   }
 }

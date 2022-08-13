@@ -1,7 +1,16 @@
 var db = require('./db.json')
 const express = require('express')
 const morgan = require('morgan')
+require('dotenv').config()
 const app = express()
+
+
+try{
+    const cors = require('cors')
+}catch(e){
+    app.use(cors())
+}
+
 
 app.use(express.json())
 
@@ -72,5 +81,5 @@ app.get('/info',(req,res)=>{
 
 const port = process.env.PORT || 3001
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+    console.log(`Phonebook app listening on port ${port}`)
 })
