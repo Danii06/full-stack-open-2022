@@ -1,16 +1,10 @@
-var db = require('./db.json')
+const database = require('./services/database')
 const express = require('express')
 const morgan = require('morgan')
-require('dotenv').config()
+const e = require('express')
 const app = express()
 
-
-try{
-    const cors = require('cors')
-}catch(e){
-    app.use(cors())
-}
-
+database.connect()
 
 app.use(express.json())
 
@@ -27,59 +21,115 @@ app.use(morgan(function (tokens, req, res) {
     ].join(' ')
 }))
 
-app.get('/api/persons',(req,res)=>{
-    res.json(db)
+app.get('/api/persons', (req, res) => {
+    database.getAll().then((data) => {
+        if (data === undefined) {
+            return {}
+        }
+        res.json(data)
+    })
 })
 
-app.get('/api/persons/:id',(req,res)=>{
-    const entry = db.find((e)=>e.id===parseInt(req.params.id))
-    if(entry){
-        res.json(entry)
-    }else{
-        res.status(404).json({ error: 'No such ID in phonebook' })
-    }
-})
-
-app.delete('/api/persons/:id',(req,res)=>{
-    const entry = db.find((e)=>e.id===parseInt(req.params.id))
-    if(entry){
-        db=db.filter((e)=>e.id!==parseInt(req.params.id))
-        res.status(204).end()
-    }else{
-        res.status(404).json({ error: 'No such ID in phonebook' })
-    }
-})
-
-const generateID = () =>{
-    return Math.floor(Math.random()*(1024+1))
+const handleIDExistence = (id) => {
+    return database.findID(id).then((person) => {
+        return [!!person,person]
+    })
 }
-app.post('/api/persons',(req,res)=>{
+
+app.get('/api/persons/:id', (req, res, next) => {
+    handleIDExistence(req.params.id, next).then(([exists, person])=>{
+        if(exists){
+            res.json(person)
+        }else{
+            res.status(404).json({ error: 'No such ID in phonebook' })
+        }
+    }).catch(error=>next(error))
+})
+
+app.delete('/api/persons/:id', (req, res, next) => {
+    handleIDExistence(req.params.id, next).then(([exists, person])=>{
+        if(exists){
+            database.del(req.params.id)
+            res.status(204).end()
+        }else{
+            res.status(404).json({ error: 'No such ID in phonebook' })
+        }
+    }).catch(error=>next(error))
+})
+
+
+app.post('/api/persons', (req, res) => {
     const data = req.body
-    if(!("name" in data && "number" in data)){
+    if (!("name" in data && "number" in data)) {
         res.status(400).json({
-            error:"Name or Number missing"
+            error: "Name or Number missing"
         })
         return
+    }
+
+    database.findName(data.name).then((names) => {
+        if (names.length !== 0) {
+            res.status(403).json({
+                error: "A record with that name already exists"
+            })
+        }
+        const newEntry = { name: data.name, number: data.number }
+        database.add(newEntry).then((person) => {
+            res.status(201).json(person)
+        })
+        
+    })
+
+})
+
+app.put('/api/persons/:id', (req, res, next) => {
+    const data = req.body
+    if (!("name" in data && "number" in data)) {
+        res.status(400).json({
+            error: "Name or Number missing"
+        })
+        return
+    }
+
+    handleIDExistence(req.params.id, next).then(([exists, person])=>{
+        if(exists){
+            database.updateByID(req.params.id, data).then(()=>{data.id=person._id;res.status(200).json(data)})
+        }else{
+            res.status(404).json({ error: 'No such ID in phonebook' })
+        }
+    }).catch(error=>next(error))
+
+    
+})
+
+app.get('/info', (req, res) => {
+    database.getAll().then((data) => {
+        if (data === undefined) {
+            return {}
+        }
+        res.send(`Phonebook has info for ${data.length} people<br>
+            ${new Date().toString()}`)
+    })
+    
+})
+
+const errorHandler = (error, request, response, next) => {
+    console.error("Error:", error.message)
+
+    if (error.name === 'CastError') {
+        response.status(400).send({ error: 'Malformatted ID' })
     }
     
-    if(db.map((person)=>person.name).includes(data.name)){
-        res.status(403).json({
-            error:"A record with that name already exists"
-        })
-        return
-    }
+    next(error)
+}
 
-    const newEntry = {name:data.name,number:data.number,id:generateID()}
-    db = db.concat(newEntry)
-    res.status(201).json(newEntry)
-})
-
-app.get('/info',(req,res)=>{
-    res.send(`Phonebook has info for ${db.length} people<br>
-            ${new Date().toString()}`)
-})
+app.use(errorHandler)
 
 const port = process.env.PORT || 3001
 app.listen(port, () => {
     console.log(`Phonebook app listening on port ${port}`)
 })
+
+process.on('exit', function() {
+    database.disconnect()
+});
