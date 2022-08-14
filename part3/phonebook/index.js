@@ -1,7 +1,7 @@
 const database = require('./services/database')
 const express = require('express')
 const morgan = require('morgan')
-const e = require('express')
+require('express')
 const app = express()
 
 database.connect()
@@ -58,14 +58,14 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const data = req.body
-    if (!("name" in data && "number" in data)) {
-        res.status(400).json({
-            error: "Name or Number missing"
-        })
-        return
-    }
+    // if (!("name" in data && "number" in data)) {
+    //     res.status(400).json({
+    //         error: "Name or Number missing"
+    //     })
+    //     return
+    // }
 
     database.findName(data.name).then((names) => {
         if (names.length !== 0) {
@@ -76,7 +76,7 @@ app.post('/api/persons', (req, res) => {
         const newEntry = { name: data.name, number: data.number }
         database.add(newEntry).then((person) => {
             res.status(201).json(person)
-        })
+        }).catch((e)=>next(e))
         
     })
 
@@ -84,20 +84,20 @@ app.post('/api/persons', (req, res) => {
 
 app.put('/api/persons/:id', (req, res, next) => {
     const data = req.body
-    if (!("name" in data && "number" in data)) {
-        res.status(400).json({
-            error: "Name or Number missing"
-        })
-        return
-    }
+    // if (!("name" in data && "number" in data)) {
+    //     res.status(400).json({
+    //         error: "Name or Number missing"
+    //     })
+    //     return
+    // }
 
     handleIDExistence(req.params.id, next).then(([exists, person])=>{
         if(exists){
-            database.updateByID(req.params.id, data).then(()=>{data.id=person._id;res.status(200).json(data)})
+            database.updateByID(req.params.id, data).then(()=>{data.id=person._id;res.status(200).json(data)}).catch(error=>next(error))
         }else{
             res.status(404).json({ error: 'No such ID in phonebook' })
         }
-    }).catch(error=>next(error))
+    })
 
     
 })
@@ -118,6 +118,8 @@ const errorHandler = (error, request, response, next) => {
 
     if (error.name === 'CastError') {
         response.status(400).send({ error: 'Malformatted ID' })
+    } else if (error.name === 'ValidationError') {
+        return response.status(400).json({ error: error.message })
     }
     
     next(error)

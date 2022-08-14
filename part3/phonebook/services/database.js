@@ -4,8 +4,16 @@ require('dotenv').config()
 const url = `mongodb+srv://daniad:${process.env.MONGODB_PASS}@cluster0.fk6a8ig.mongodb.net/?retryWrites=true&w=majority`
 
 const person = mongoose.Schema({
-    name:String,
-    number:String
+    name:{
+        type:String,
+        minLength: 3,
+        required: true
+    },
+    number:{
+        type:String,
+        minLength:8,
+        required: true
+    },
 })
 
 person.set('toJSON', {
@@ -41,7 +49,7 @@ const findName = (name) => {
 }
 
 const updateByID = (id, data) => {
-    return Person.findByIdAndUpdate(id,data)
+    return Person.findByIdAndUpdate(id,data,{runValidators: true})
 }
 
 const del = (id) => {
