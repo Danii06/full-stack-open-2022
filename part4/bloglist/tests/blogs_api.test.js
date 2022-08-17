@@ -62,7 +62,7 @@ const blogs = [
 	}
 ]
 
-describe("blogs_api_test", () => {
+describe("Blog API test", () => {
 
 	beforeEach(async () => {
 		await Blog.deleteMany({})
@@ -136,6 +136,80 @@ describe("blogs_api_test", () => {
 		}
 
 		await api.post("/api/blogs").send(testinfo).expect(400)
+	})
+
+	test("successfully delete an entry", async () => {
+
+		const contentBefore = await api.get("/api/blogs").expect(200)
+		const lengthBefore = contentBefore.body.length
+
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(204)
+
+		const contentAfter = await api.get("/api/blogs").expect(200)
+		const lengthAfter = contentAfter.body.length
+
+		expect(lengthAfter).toBe(lengthBefore-1)
+
+		expect(_.sortBy(contentAfter.body.concat(blogs[0]),"_id")).toEqual(_.sortBy(contentBefore.body,"_id"))
+	})
+
+	test("deleting malformatted id causes 400 status code", async () => {
+
+		await api.delete("/api/blogs/1").send().expect(400)
+
+	})
+
+	test("deleting nonexistant entry causes 403 status code", async () => {
+
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(204)
+
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(403)
+
+	})
+
+	test("successfully update an entry", async () => {
+
+		const contentBefore = await api.get("/api/blogs").expect(200)
+		const lengthBefore = contentBefore.body.length
+
+		const updatedBlog = { ...blogs[0] }
+		updatedBlog.likes = -1
+		updatedBlog.url = "TestURL"
+		updatedBlog.author = "TestAuthor"
+		updatedBlog.title = "TestTitle"
+
+		await api.put("/api/blogs/5a422a851b54a676234d17f7").send(updatedBlog).expect(200)
+
+		const contentAfter = await api.get("/api/blogs").expect(200)
+		const lengthAfter = contentAfter.body.length
+
+		expect(lengthAfter).toBe(lengthBefore)
+
+		expect(contentAfter.body).toContainEqual(updatedBlog)
+	})
+
+	test("updating an entry with incorrect or missing information causes 400 status code", async () => {
+
+		const updatedBlog = { ...blogs[0] }
+		updatedBlog.likes = "Hello"
+		updatedBlog.url = undefined
+		updatedBlog.author = 1
+		updatedBlog.title = { title:"Test" }
+
+		await api.put("/api/blogs/5a422a851b54a676234d17f7").send(updatedBlog).expect(400)
+	})
+
+	test("updating malformatted id causes 400 status code", async () => {
+
+		await api.put("/api/blogs/1").send({ title: "TestTitle" }).expect(400)
+
+	})
+
+	test("updating a nonexistant entry causes 403 status code", async () => {
+
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(204)
+
+		await api.put("/api/blogs/5a422a851b54a676234d17f7").send({ title:"TestTitle" }).expect(403)
 	})
 
 })

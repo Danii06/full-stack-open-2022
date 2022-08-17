@@ -15,6 +15,8 @@ app.use((err, req, res, next) => {
 	logger.error(err.stack)
 	if(err.name === "ValidationError")
 		res.status(400).json({ error: err.message })
+	if(err.name === "CastError")
+		res.status(400).json({ error: err.message })
 })
 
 
