@@ -2,13 +2,25 @@ GET http://localhost:3003/api/blogs
 ###
 POST http://localhost:3003/api/blogs 
 Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWQiOiI2MzAwZTZlMjllZDI1N2UwMTRmZTIzZDUiLCJpYXQiOjE2NjEwMDM4NDd9.Fij1vpH29HtybLh570-S_elMnqa9vsAFjjgoi8uA4iE
 
 {
-    "name":"Danii",
-    "number":"00-000000"
+    "title":"testtitle",
+    "author":"Danii",
+    "url":"testurl"
 }
 ###
-DELETE http://localhost:3003/api/blogs/1
+PUT http://localhost:3003/api/blogs/63022b6e0b8d5d8c72b50930 
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWQiOiI2MzAwZTZlMjllZDI1N2UwMTRmZTIzZDUiLCJpYXQiOjE2NjEwMDM4NDd9.Fij1vpH29HtybLh570-S_elMnqa9vsAFjjgoi8uA4iE
+
+{
+    "title":"newTitle"
+}
+###
+DELETE http://localhost:3003/api/blogs/63022aa8a5fe89b8d3619db7
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWQiOiI2MzAwZTZlMjllZDI1N2UwMTRmZTIzZDUiLCJpYXQiOjE2NjEwMDM4NDd9.Fij1vpH29HtybLh570-S_elMnqa9vsAFjjgoi8uA4iE
 ###
 GET http://localhost:3003/api/users
 ###
@@ -16,7 +28,15 @@ POST http://localhost:3003/api/users
 Content-Type: application/json
 
 {
-    "name":"Danii",
-    "username":"daasdasdsdai",
-    "password":1
+    "name":"admin",
+    "username":"admin",
+    "password":"admin"
+}
+###
+POST http://localhost:3003/api/login 
+Content-Type: application/json
+
+{
+    "username":"BLOG API TEST USER",
+    "password":"BLOG API TEST USER"
 }

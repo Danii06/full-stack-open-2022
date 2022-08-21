@@ -2,6 +2,7 @@ const mongoose = require("mongoose")
 const supertest = require("supertest")
 const app = require("../app")
 const Blog = require("../models/Blog")
+const User = require("../models/User")
 const _ = require("lodash")
 
 require("dotenv").config()
@@ -64,9 +65,33 @@ const blogs = [
 
 describe("Blog API test", () => {
 
+	var token = undefined
+
 	beforeEach(async () => {
+		var matchingUsers = await User.find({ "username":"BLOG API TEST USER" })
+		if(matchingUsers.length===0)
+			await api.post("/api/users").send({
+				"name":"BLOG API TEST USER",
+				"username":"BLOG API TEST USER",
+				"password":"BLOG API TEST USER"
+			})
+
+
+		matchingUsers = await User.find({ "username":"BLOG API TEST USER" })
+		const user = matchingUsers[0]
+
+		await api.post("/api/login").send({
+			"username":"BLOG API TEST USER",
+			"password":"BLOG API TEST USER"
+		}).expect(function(res){
+			token = res.body.token
+		})
+
+		var blogsWithUser = _.map(blogs,(blog) => {blog.user=user._id;return blog})
+
 		await Blog.deleteMany({})
-		await Promise.all(blogs.map(x => new Blog(x).save()))
+		await Promise.all(blogsWithUser.map(x => new Blog(x).save()))
+
 	})
 
 	test("blogs are returned as json", async () => {
@@ -91,7 +116,7 @@ describe("Blog API test", () => {
 		const contentBefore = await api.get("/api/blogs").expect(200)
 		const lengthBefore = contentBefore.body.length
 
-		await api.post("/api/blogs").send(testinfo).expect(201)
+		await api.post("/api/blogs").set("Authorization", "Bearer "+token).send(testinfo).expect(201)
 
 		const contentAfter = await api.get("/api/blogs").expect(200)
 		const lengthAfter = contentAfter.body.length
@@ -113,7 +138,7 @@ describe("Blog API test", () => {
 			author: "Test author",
 			url: "Test url" }
 
-		await api.post("/api/blogs").send(testinfo).expect(201)
+		await api.post("/api/blogs").set("Authorization", "Bearer "+token).send(testinfo).expect(201)
 
 		const contentAfter = await api.get("/api/blogs").expect(200)
 
@@ -135,7 +160,7 @@ describe("Blog API test", () => {
 			likes: 7357
 		}
 
-		await api.post("/api/blogs").send(testinfo).expect(400)
+		await api.post("/api/blogs").set("Authorization", "Bearer "+token).send(testinfo).expect(400)
 	})
 
 	test("successfully delete an entry", async () => {
@@ -143,27 +168,42 @@ describe("Blog API test", () => {
 		const contentBefore = await api.get("/api/blogs").expect(200)
 		const lengthBefore = contentBefore.body.length
 
-		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(204)
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").set("Authorization", "Bearer "+token).send().expect(204)
 
 		const contentAfter = await api.get("/api/blogs").expect(200)
 		const lengthAfter = contentAfter.body.length
 
 		expect(lengthAfter).toBe(lengthBefore-1)
 
-		expect(_.sortBy(contentAfter.body.concat(blogs[0]),"_id")).toEqual(_.sortBy(contentBefore.body,"_id"))
+		const newBlog = blogs[0]
+		newBlog.user.id=Buffer.from(newBlog.user.id).toString("hex")
+
+		expect(_.chain(contentAfter.body).concat(blogs[0])
+			.sortBy("_id")
+			.map((blog) => {
+				blog.user=blog.user.id.toString()
+				return blog})
+			.value())
+			.toEqual(_.chain(contentBefore.body)
+				.sortBy("_id")
+				.map((blog) => {
+					blog.user=blog.user.id.toString()
+					return blog
+				}).toJSON())
+
 	})
 
 	test("deleting malformatted id causes 400 status code", async () => {
 
-		await api.delete("/api/blogs/1").send().expect(400)
+		await api.delete("/api/blogs/1").set("Authorization", "Bearer "+token).send().expect(400)
 
 	})
 
 	test("deleting nonexistant entry causes 403 status code", async () => {
 
-		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(204)
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").set("Authorization", "Bearer "+token).send().expect(204)
 
-		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(403)
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").set("Authorization", "Bearer "+token).send().expect(403)
 
 	})
 
@@ -178,14 +218,20 @@ describe("Blog API test", () => {
 		updatedBlog.author = "TestAuthor"
 		updatedBlog.title = "TestTitle"
 
-		await api.put("/api/blogs/5a422a851b54a676234d17f7").send(updatedBlog).expect(200)
+		await api.put("/api/blogs/5a422a851b54a676234d17f7").set("Authorization", "Bearer "+token).send(updatedBlog).expect(204)
 
 		const contentAfter = await api.get("/api/blogs").expect(200)
 		const lengthAfter = contentAfter.body.length
 
 		expect(lengthAfter).toBe(lengthBefore)
 
-		expect(contentAfter.body).toContainEqual(updatedBlog)
+		expect(_.map(contentAfter.body,(blog) => {blog.user=blog.user.id;return blog})).toContainEqual(expect.objectContaining({
+			_id:updatedBlog._id,
+			title:updatedBlog.title,
+			author:updatedBlog.author,
+			likes:updatedBlog.likes,
+			url:updatedBlog.url
+		}))
 	})
 
 	test("updating an entry with incorrect or missing information causes 400 status code", async () => {
@@ -196,20 +242,25 @@ describe("Blog API test", () => {
 		updatedBlog.author = 1
 		updatedBlog.title = { title:"Test" }
 
-		await api.put("/api/blogs/5a422a851b54a676234d17f7").send(updatedBlog).expect(400)
+		await api.put("/api/blogs/5a422a851b54a676234d17f7").set("Authorization", "Bearer "+token).send(updatedBlog).expect(400)
 	})
 
 	test("updating malformatted id causes 400 status code", async () => {
 
-		await api.put("/api/blogs/1").send({ title: "TestTitle" }).expect(400)
+		await api.put("/api/blogs/1").send({ title: "TestTitle" }).set("Authorization", "Bearer "+token).expect(400)
 
 	})
 
 	test("updating a nonexistant entry causes 403 status code", async () => {
 
-		await api.delete("/api/blogs/5a422a851b54a676234d17f7").send().expect(204)
+		await api.delete("/api/blogs/5a422a851b54a676234d17f7").set("Authorization", "Bearer "+token).send().expect(204)
 
-		await api.put("/api/blogs/5a422a851b54a676234d17f7").send({ title:"TestTitle" }).expect(403)
+		await api.put("/api/blogs/5a422a851b54a676234d17f7").set("Authorization", "Bearer "+token).send({ title:"TestTitle" }).expect(403)
+	})
+
+	test("adding new blog without authorization causes 401 error", async () => {
+
+		await api.post("/api/blogs").send(blogs[0]).expect(401)
 	})
 
 })
