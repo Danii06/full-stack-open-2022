@@ -1,0 +1,42 @@
+GET http://localhost:3003/api/blogs
+###
+POST http://localhost:3003/api/blogs 
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWQiOiI2MzAzNTlhZWYyYzAyYjgzMGUzNzUyZTkiLCJpYXQiOjE2NjExNjU2NDV9.orjUPudsSqcY4coX-BE4raPt9rWAPVMgFozE5Hi8kCY
+
+{
+    "title":"testtitle",
+    "author":"Danii",
+    "url":"testurl"
+}
+###
+PUT http://localhost:3003/api/blogs/63022b6e0b8d5d8c72b50930 
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWQiOiI2MzAwZTZlMjllZDI1N2UwMTRmZTIzZDUiLCJpYXQiOjE2NjEwMDM4NDd9.Fij1vpH29HtybLh570-S_elMnqa9vsAFjjgoi8uA4iE
+
+{
+    "title":"newTitle"
+}
+###
+DELETE http://localhost:3003/api/blogs/63022aa8a5fe89b8d3619db7
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWQiOiI2MzAwZTZlMjllZDI1N2UwMTRmZTIzZDUiLCJpYXQiOjE2NjEwMDM4NDd9.Fij1vpH29HtybLh570-S_elMnqa9vsAFjjgoi8uA4iE
+###
+GET http://localhost:3003/api/users
+###
+POST http://localhost:3003/api/users 
+Content-Type: application/json
+
+{
+    "name":"admin",
+    "username":"admin",
+    "password":"admin"
+}
+###
+POST http://localhost:3003/api/login 
+Content-Type: application/json
+
+{
+    "username":"admin",
+    "password":"admin"
+}
