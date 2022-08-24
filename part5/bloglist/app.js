@@ -40,6 +40,12 @@ const userExtractor = async (req,res,next) => {
 app.use(tokenExtractor)
 app.use(userExtractor)
 
+
+if (process.env.NODE_ENV === "test") {
+	const testingRouter = require("./controllers/testingController.js")
+	app.use("/api/testing", testingRouter)
+}
+
 const blogsRouter = require("./controllers/bloglist.js")
 app.use("/api/blogs",blogsRouter)
 

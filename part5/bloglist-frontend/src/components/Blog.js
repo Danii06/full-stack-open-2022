@@ -11,11 +11,13 @@ const blogStyle = {
 }
 
 const Blog = ({ blog, onLike, removeBlog, username }) => (
-	<div style={blogStyle}>{blog.title} by {blog.author} <br />
+	<div style={blogStyle} id="BlogTitleAuthor" class="BlogTitleAuthor">{blog.title} by {blog.author} <br />
 		<Togglable buttonLabel="show" closeButtonLabel="hide">
+			<div id="BlogExtendedInfo">
 				URL: {blog.url} <br />
-				Likes: {blog.likes} <button onClick={() => onLike(blog._id, blog.likes+1)}>Like</button><br />
+				Likes: {blog.likes} <button onClick={() => onLike(blog._id, blog.likes+1)} class="likebutton">Like</button><br />
 				Added by: {blog.user.name}, aka {blog.user.username} <br />
+			</div>
 		</Togglable>
 		{blog.user.username===username?<button onClick={() => removeBlog(blog._id, blog.title, blog.author)}>Remove</button>:null}
 	</div>

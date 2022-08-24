@@ -42,8 +42,7 @@ blogsRouter.delete("/:id", async (request, response) => {
 blogsRouter.put("/:id", async (request, response) => {
 
 	const doc = await Blog.findById(request.params.id).orFail()
-
-	if(doc.user._id.toString()===request.credentials.id){
+	if(JSON.stringify(Object.keys(request.body))===JSON.stringify(Object.keys({ likes:0 })) || doc.user._id.toString()===request.credentials.id){
 		await Blog.findByIdAndUpdate(request.params.id, request.body).orFail()
 		response.status(204).send()
 	}else{

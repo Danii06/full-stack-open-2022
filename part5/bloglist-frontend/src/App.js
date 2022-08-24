@@ -79,7 +79,12 @@ const App = () => {
 	const refreshBlogs = () => {
 		blogService.getAll().then(blogs =>
 			setBlogs( blogs )
-		)
+		).catch((error)=>{
+			if (error.response) {
+				setNotification("No Blogs Found", NotificationState.Error)
+			}
+			setBlogs({})
+		})
 	}
 
 	const login = (event) => {
@@ -146,6 +151,7 @@ const App = () => {
 			}
 			)
 		}
+		refreshBlogs()
 	}
 
 	const logout = (event) => {
@@ -159,7 +165,7 @@ const App = () => {
 		<div>
 			<Notification message={message} state={state} />
 
-			{user !== null ? (<><p>{user.username + " logged in"}<button onClick={logout}>Logout</button></p></>) : ""}
+			{user !== null ? (<><p>{user.username + " logged in"}<button onClick={logout} id="logoutbutton">Logout</button></p></>) : ""}
 
 			{user === null ? (
 				<LoginForm onSubmit={login}/>
