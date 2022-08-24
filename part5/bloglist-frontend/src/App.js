@@ -1,10 +1,13 @@
 import "./App.css"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, React } from "react"
 import Blog from "./components/Blog"
 import blogService from "./services/blogs"
 import loginService from "./services/loginService"
 import LoginForm from "./components/LoginForm"
 import BlogSubmitForm from "./components/BlogSubmitForm"
+import Togglable from "./components/Toggleable"
+import PropTypes from "prop-types"
+import _ from "lodash"
 
 
 const NotificationState = {
@@ -24,6 +27,11 @@ const Notification = ({ message, state }) => {
 	)
 }
 
+Notification.propTypes = {
+	message: PropTypes.string.isRequired,
+	state: PropTypes.string.isRequired,
+}
+
 
 var notificationExpiryTimer = null
 const App = () => {
@@ -32,22 +40,8 @@ const App = () => {
 	const [token, setToken] = useState(null)
 	const [message, setMessage] = useState(null)
 	const [state, setState] = useState(null)
+	const blogFormToggle = useRef()
 
-	const refreshBlogs = () => {
-		blogService.getAll().then(blogs =>
-			setBlogs( blogs )
-		)
-	}
-
-	const setNotification = (message, state) => {
-		setMessage(message)
-		setState(state)
-		if(notificationExpiryTimer!==null){clearTimeout(notificationExpiryTimer)}
-		notificationExpiryTimer = setTimeout(() => {
-			setMessage(null)
-		},3000)
-
-	}
 
 	useEffect(() => {
 		const savedUser = window.localStorage.getItem("user")
@@ -69,6 +63,24 @@ const App = () => {
 			window.localStorage.removeItem("token")
 		}
 	},[user])
+
+
+
+	const setNotification = (message, state) => {
+		setMessage(message)
+		setState(state)
+		if(notificationExpiryTimer!==null){clearTimeout(notificationExpiryTimer)}
+		notificationExpiryTimer = setTimeout(() => {
+			setMessage(null)
+		},3000)
+
+	}
+
+	const refreshBlogs = () => {
+		blogService.getAll().then(blogs =>
+			setBlogs( blogs )
+		)
+	}
 
 	const login = (event) => {
 		event.preventDefault()
@@ -101,12 +113,39 @@ const App = () => {
 		blogService.post(title, author, url, token).then(() => {
 			refreshBlogs()
 			setNotification(`Added a new blog ${title} by ${author}`, NotificationState.Success)
-		}).catch(
-			function (error) {
-				if (error.response) {
-					setNotification(error.response.data.error, NotificationState.Error)
-				}
-			})
+		}).catch((error) => {
+			if (error.response) {
+				setNotification(error.response.data.error, NotificationState.Error)
+			}
+		}
+		).finally(() => {
+			blogFormToggle.current.toggleVisibility()
+			event.target.elements.title.value=""
+			event.target.elements.author.value=""
+			event.target.elements.url.value=""
+		}
+		)
+	}
+
+	const updateLikes = (blogID, likes) => {
+		blogService.put({ likes },blogID, token).then(() => {
+			refreshBlogs()
+		}).catch((error) => {
+			setNotification("Error liking blog: " + error.response.data.error, NotificationState.Error)
+		}
+		)
+	}
+
+	const removeBlog = (blogID, blogName, blogAuthor) => {
+		if(window.confirm(`Really delete ${blogName} by ${blogAuthor}?`)){
+			blogService.del(blogID, token).then(() => {
+				setNotification(`Deleted ${blogName} by ${blogAuthor}`, NotificationState.Success)
+				refreshBlogs()
+			}).catch((error) => {
+				setNotification("Error deleting blog: " + error.response.data.error, NotificationState.Error)
+			}
+			)
+		}
 	}
 
 	const logout = (event) => {
@@ -115,6 +154,7 @@ const App = () => {
 		setToken(null)
 	}
 
+
 	return (
 		<div>
 			<Notification message={message} state={state} />
@@ -122,15 +162,14 @@ const App = () => {
 			{user !== null ? (<><p>{user.username + " logged in"}<button onClick={logout}>Logout</button></p></>) : ""}
 
 			{user === null ? (
-				<>
-					<h2>Login</h2>
-					<LoginForm onSubmit={login}/>
-				</>
+				<LoginForm onSubmit={login}/>
 			) : [
-				<BlogSubmitForm key="blogform" onSubmit={submitBlog}/>
+				<Togglable key="blogformtoggle" buttonLabel="Add new blog" ref={blogFormToggle}>
+					<BlogSubmitForm onSubmit={submitBlog}/>
+				</Togglable>
 				,
-				blogs.map(blog =>
-					<Blog key={blog.id} blog={blog} />
+				_.sortBy(blogs,"likes").reverse().map(blog =>
+					<Blog key={blog.id} blog={blog} onLike={updateLikes} removeBlog={removeBlog} username={user.username}/>
 				)]
 			}
 

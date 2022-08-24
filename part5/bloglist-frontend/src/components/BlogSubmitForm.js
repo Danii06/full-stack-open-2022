@@ -1,3 +1,6 @@
+import React from "react"
+import PropTypes from "prop-types"
+
 const BlogSubmitForm = (props) => {
 	return (
 		<>
@@ -10,6 +13,10 @@ const BlogSubmitForm = (props) => {
 			</form>
 		</>
 	)
+}
+
+BlogSubmitForm.propTypes = {
+	onSubmit: PropTypes.func.isRequired
 }
 
 export default BlogSubmitForm

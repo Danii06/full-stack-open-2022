@@ -11,4 +11,15 @@ const post = (title, author, url, token) => {
 	return request.then(response => response.data)
 }
 
-export default { getAll, post }
+const put = (newdata, blogID, token) => {
+	const request = axios.put(baseUrl+`/${blogID}`, newdata,{ headers: { "Authorization": `Bearer ${token}` } })
+	return request.then(response => response.data)
+}
+
+const del = (blogID, token) => {
+	const request = axios.delete(baseUrl+`/${blogID}`, { headers: { "Authorization": `Bearer ${token}` } })
+	return request.then(response => response.data)
+}
+
+
+export default { getAll, post, put, del }
