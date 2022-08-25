@@ -1,9 +1,9 @@
-import { useSelector } from "react-redux"
 import React from "react"
+import { connect } from "react-redux"
+import PropTypes from "prop-types"
 
 
-const Notification = () => {
-	const notification = useSelector(state => state.notification)
+const Notification = (props) => {
 	const style = {
 		border: "solid",
 		padding: 10,
@@ -16,11 +16,22 @@ const Notification = () => {
 		borderWidth: 1
 	}
 	return (
-		<div style={notification!=="" ? style : hidden}>
-			{notification}
+		<div style={props.notification!=="" ? style : hidden}>
+			{props.notification}
 		</div>
 	)
 }
 
-export default Notification
+Notification.propTypes = {
+	notification: PropTypes.string.isRequired
+}
+
+function mapStateToProps(state) {
+	return {
+		notification: state.notification
+	}
+}
+
+// eslint-disable-next-line no-unused-labels
+export default connect(mapStateToProps,null)(Notification)
 

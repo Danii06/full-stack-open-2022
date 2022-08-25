@@ -47,7 +47,6 @@ const newAnecdoteFromEvent = (e) => {
 const voteAndUpdateDatabase = (anecdote) => {
 	return async dispatch => {
 		anecdote = {...anecdote, votes: anecdote.votes+1}
-		console.log(anecdote)
 		update(anecdote)
 		dispatch(anecdoteSlice.actions.vote(anecdote.id))
 	}
