@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useField } from "./hooks"
 import {Link, BrowserRouter as Router, Routes, Route, useParams, useNavigate} from "react-router-dom"
 import React from "react"
 
@@ -22,7 +23,8 @@ const Anecdote = ({ anecdotes }) => {
 		<div><br />
 			<strong>{anecdote.content}</strong><br />
 			<em>by {anecdote.author}</em>
-			<div>Votes: {anecdote.votes}</div> <br />
+			<div>Votes: {anecdote.votes}</div> 
+			<div>For more info see <a href={anecdote.info}>{anecdote.info}</a></div><br />
 		</div>
 	)
 }
@@ -58,23 +60,28 @@ const Footer = () => (
 	</div>
 )
 
+
+
 const CreateNew = (props) => {
-	const [content, setContent] = useState("")
-	const [author, setAuthor] = useState("")
-	const [info, setInfo] = useState("")
+	const {reset: resetContent, ...contentHook} = useField("text")
+	const {reset: resetAuthor ,...authorHook} = useField("text")
+	const {reset: resetInfo ,...infoHook} = useField("text")
 	const navigate = useNavigate()
 
 
 	const handleSubmit = (e) => {
 		e.preventDefault()
+		if(contentHook.value===""){
+			return
+		}
 		props.addNew({
-			content,
-			author,
-			info,
+			content: contentHook.value,
+			author: authorHook.value,
+			info: infoHook.value,
 			votes: 0
 		})
 		navigate("/")
-		props.setTimedNotification("a new anecdote "+content+" created!")
+		props.setTimedNotification("a new anecdote "+contentHook.value+" created!")
 	}
 
 	return (
@@ -82,18 +89,19 @@ const CreateNew = (props) => {
 			<h2>create a new anecdote</h2>
 			<form onSubmit={handleSubmit}>
 				<div>
-          content
-					<input name='content' value={content} onChange={(e) => setContent(e.target.value)} />
+		content
+					<input name='content' {...contentHook} />
 				</div>
 				<div>
-          author
-					<input name='author' value={author} onChange={(e) => setAuthor(e.target.value)} />
+		author
+					<input name='author' {...authorHook} />
 				</div>
 				<div>
-          url for more info
-					<input name='info' value={info} onChange={(e)=> setInfo(e.target.value)} />
+		url for more info
+					<input name='info' {...infoHook} />
 				</div>
-				<button>create</button>
+				<input type="submit" value="Create" />
+				<input type="button" value="Reset" onClick={()=>{resetContent();resetAuthor();resetInfo()}} />
 			</form>
 		</div>
 	)
